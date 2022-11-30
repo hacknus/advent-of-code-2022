@@ -58,10 +58,7 @@ fn day_to_problem(day: usize) -> Option<Box<dyn Problem>> {
         23 => Some(Box::new(DayTwentyThree {})),
         24 => Some(Box::new(DayTwentyFour {})),
         25 => Some(Box::new(DayTwentyFive {})),
-        _ => {
-            println!("No problem for day {day}...");
-            None
-        }
+        _ => None
     }
 }
 
@@ -69,7 +66,9 @@ fn main() {
     let current_date = chrono::Utc::now();
     let day = current_date.day();
     match day_to_problem(day as usize) {
-        None => {}
+        None => {
+            println!("No problem for day {day}...");
+        }
         Some(problem) => {
             let answer_one = problem.part_one(format!("input/puzzle_{day}_1.txt").as_str());
             let answer_two = problem.part_two(format!("input/puzzle_{day}_2.txt").as_str());

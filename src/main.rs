@@ -71,8 +71,8 @@ fn main() {
     match day_to_problem(day as usize) {
         None => {}
         Some(problem) => {
-            let answer_one = problem.part_one("");
-            let answer_two = problem.part_two("");
+            let answer_one = problem.part_one(format!("input/puzzle_{day}_1.txt").as_str());
+            let answer_two = problem.part_two(format!("input/puzzle_{day}_2.txt").as_str());
             println!("Answer of Task Day {day}/1:");
             println!("{answer_one}\n");
             println!("Answer of Task Day {day}/2:");

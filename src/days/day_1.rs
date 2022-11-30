@@ -4,6 +4,7 @@ pub struct DayOne {}
 
 impl Problem for DayOne {
     fn part_one(&self, input: &str) -> String {
+        println!("opening {input}");
         format!("{}", "Part one not yet implemented.")
     }
 

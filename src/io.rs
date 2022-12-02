@@ -9,11 +9,11 @@ pub fn read_file_lines(file_path: &str) -> Vec<String> {
 }
 
 #[allow(dead_code)]
-pub fn read_from_csv(path: &str) -> Vec<Vec<f64>> {
+pub fn read_from_csv_to_String(path: &str) -> Vec<Vec<String>> {
     // Creates a new csv 'Reader' from a file
     let mut reader = csv::ReaderBuilder::new()
-        .delimiter(b',')
-        .has_headers(true)
+        .delimiter(b' ')
+        .has_headers(false)
         .from_path(path).expect("Failed to open CSV!");
     // Retrieve and print header record
     match reader.headers(){
@@ -30,14 +30,15 @@ pub fn read_from_csv(path: &str) -> Vec<Vec<f64>> {
         //println!("{:?}", record);
         let mut row = vec![];
         for cell in &record {
-             match cell.parse::<f64>() {
-                 Ok(value) => {
-                     row.push(value);
-                 }
-                 Err(err) => {
-                     println!("Error {err} parsing value {row:?}");
-                 }
-             }
+             // match cell.parse::<f64>() {
+             //     Ok(value) => {
+             //         row.push(value);
+             //     }
+             //     Err(err) => {
+             //         println!("Error {err} parsing value {row:?}");
+             //     }
+             // }
+            row.push(cell.to_string());
         }
         contents.push(row);
     }

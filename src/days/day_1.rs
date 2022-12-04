@@ -1,4 +1,4 @@
-use crate::io::{read_file_lines, read_from_csv_to_String};
+use crate::io::{read_file_lines, read_from_csv};
 use crate::problem::Problem;
 use std::cmp::Ordering;
 

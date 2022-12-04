@@ -1,4 +1,4 @@
-use crate::io::read_from_csv_to_String;
+use crate::io::read_from_csv;
 use crate::problem::Problem;
 
 pub struct DayTwo {}
@@ -58,7 +58,8 @@ pub fn get_score(opponent: &str, me: &str) -> u32 {
 
 impl Problem for DayTwo {
     fn part_one(&self, input: &str) -> String {
-        let contents = read_from_csv_to_String(input);
+        let contents = read_from_csv(input, b' ');
+        println!("contents: {contents:?}");
         let mut score = 0;
         for row in contents {
             score += get_score(&row[0], &row[1]);
@@ -67,7 +68,7 @@ impl Problem for DayTwo {
     }
 
     fn part_two(&self, input: &str) -> String {
-        let mut contents = read_from_csv_to_String(input);
+        let mut contents = read_from_csv(input, b' ');
         let mut score = 0;
         for row in contents.iter_mut() {
             let my_move = match row[1].as_str() {

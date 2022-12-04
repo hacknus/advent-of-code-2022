@@ -64,11 +64,9 @@ impl Problem for DayFour {
                 }
             }
 
-            if (first_elf[0]..first_elf[1] + 1).contains(&second_elf[0]) ||
-                (first_elf[0]..first_elf[1] + 1).contains(&second_elf[1]) {
+            if (first_elf[0]..first_elf[1] + 1).contains(&second_elf[1])  {
                 partially_overlap += 1;
-            } else if (second_elf[0]..second_elf[1] + 1).contains(&first_elf[0]) ||
-                (second_elf[0]..second_elf[1] + 1).contains(&first_elf[1]) {
+            } else if (second_elf[0]..second_elf[1] + 1).contains(&first_elf[1]) {
                 partially_overlap += 1;
             }
         }

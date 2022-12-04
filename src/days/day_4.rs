@@ -7,7 +7,6 @@ pub struct DayFour {}
 impl Problem for DayFour {
     fn part_one(&self, input: &str) -> String {
         let contents = read_from_csv_to_String_by_comma(input);
-        println!("contents: {contents:?}");
         let re = Regex::new(r"[0-9]*").unwrap();
         let mut fully_overlap = 0;
         for pairs in contents {
@@ -41,7 +40,6 @@ impl Problem for DayFour {
 
     fn part_two(&self, input: &str) -> String {
         let contents = read_from_csv_to_String_by_comma(input);
-        println!("contents: {contents:?}");
         let re = Regex::new(r"[0-9]*").unwrap();
         let mut partially_overlap = 0;
         for pairs in contents {

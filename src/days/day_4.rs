@@ -44,7 +44,6 @@ impl Problem for DayFour {
         println!("contents: {contents:?}");
         let re = Regex::new(r"[0-9]*").unwrap();
         let mut partially_overlap = 0;
-        let mut fully_overlap = 0;
         for pairs in contents {
             let mut first_elf = [0; 2];
             let mut second_elf = [0; 2];

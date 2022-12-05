@@ -12,7 +12,6 @@ pub enum FR {
 impl Problem for DayFive {
     fn part_one(&self, input: &str) -> String {
         let contents = read_file_lines(input);
-        println!("{contents:?}");
         let conf_line = 9-1;
         let mut state = FR::CRATES;
         let mut stacks_indices = vec![];
@@ -51,10 +50,6 @@ impl Problem for DayFive {
             }
         }
 
-        println!("crates: {crates:?}");
-        println!("stacks_indices: {stacks_indices:?}");
-        println!("moves: {moves:?}");
-
         let mut stacks = vec![vec![]; stacks_indices.len()];
         for i_str in stacks_indices {
             let i = i_str.split_whitespace().map(|s| s.to_string()).collect::<String>().parse::<usize>().unwrap() - 1;
@@ -69,7 +64,6 @@ impl Problem for DayFive {
         for stack in stacks.iter_mut(){
             *stack = stack.iter().rev().map(|s| s.to_string()).collect::<Vec<String>>();
         }
-        println!("initial stacks: {stacks:?}");
 
         // moves
         for m in moves.iter() {
@@ -77,7 +71,6 @@ impl Problem for DayFive {
             let amount = m[0].parse::<usize>().unwrap();
             let origin = m[1].parse::<usize>().unwrap() - 1;
             let destination = m[2].parse::<usize>().unwrap() - 1;
-            println!("moving {amount} from {origin} to {destination}");
             for c in 0..amount {
                 let stack = stacks[origin].clone();
                 new_stacks[destination].push(stack[stack.len() - 1 - c].clone());
@@ -86,7 +79,6 @@ impl Problem for DayFive {
 
             }
             stacks = new_stacks;
-            println!("stacks after move: {stacks:?}");
         }
 
         let mut output = "".to_string();
@@ -99,7 +91,6 @@ impl Problem for DayFive {
 
     fn part_two(&self, input: &str) -> String {
         let contents = read_file_lines(input);
-        println!("{contents:?}");
         let conf_line = 9-1;
         let mut state = FR::CRATES;
         let mut stacks_indices = vec![];
@@ -138,10 +129,6 @@ impl Problem for DayFive {
             }
         }
 
-        println!("crates: {crates:?}");
-        println!("stacks_indices: {stacks_indices:?}");
-        println!("moves: {moves:?}");
-
         let mut stacks = vec![vec![]; stacks_indices.len()];
         for i_str in stacks_indices {
             let i = i_str.split_whitespace().map(|s| s.to_string()).collect::<String>().parse::<usize>().unwrap() - 1;
@@ -156,7 +143,6 @@ impl Problem for DayFive {
         for stack in stacks.iter_mut(){
             *stack = stack.iter().rev().map(|s| s.to_string()).collect::<Vec<String>>();
         }
-        println!("initial stacks: {stacks:?}");
 
         // moves
         for m in moves.iter() {
@@ -164,7 +150,6 @@ impl Problem for DayFive {
             let amount = m[0].parse::<usize>().unwrap();
             let origin = m[1].parse::<usize>().unwrap() - 1;
             let destination = m[2].parse::<usize>().unwrap() - 1;
-            println!("moving {amount} from {origin} to {destination}");
             let mut package = vec![];
             for c in 0..amount {
                 let stack = stacks[origin].clone();
@@ -179,7 +164,6 @@ impl Problem for DayFive {
             }
 
             stacks = new_stacks;
-            println!("stacks after move: {stacks:?}");
         }
 
         let mut output = "".to_string();

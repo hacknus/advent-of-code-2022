@@ -28,17 +28,17 @@ fn get_start_packet(payload: &str) -> usize {
 
 
 fn get_start_message(payload: &str) -> usize {
-    let mut last_four = vec![];
+    let mut last_fourteen = vec![];
     for (i, c) in payload.chars().enumerate() {
         if i < 14 {
-            last_four.push(c);
+            last_fourteen.push(c);
         } else {
-            last_four.rotate_left(1);
-            let len = last_four.len();
-            last_four[len - 1] = c;
+            last_fourteen.rotate_left(1);
+            let len = last_fourteen.len();
+            last_fourteen[len - 1] = c;
             let mut count = 0;
-            for j in last_four.iter() {
-                if last_four.iter().filter(|n| *n == j).count() > 1 {
+            for j in last_fourteen.iter() {
+                if last_fourteen.iter().filter(|n| *n == j).count() > 1 {
                     count += 1;
                 }
             }

@@ -163,7 +163,7 @@ impl Problem for DaySeven {
         root.borrow_mut().print_walk(0);
         let mut dirs = root.borrow_mut().walk_puzzle_2(&missing);
         dirs.sort();
-        format!("{:?}", dirs)
+        format!("{:?}", dirs[0])
     }
 }
 

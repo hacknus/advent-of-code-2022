@@ -16,7 +16,6 @@ pub fn get_sign(val: &i32) -> i32 {
 impl Problem for DayNine {
     fn part_one(&self, input: &str) -> String {
         let mut contents = read_from_csv(input, b' ');
-        println!("{contents:?}");
         let mut pos_head = [0; 2];
         let mut pos_tail = [0; 2];
         let mut tail_positions = vec![pos_tail];
@@ -24,19 +23,15 @@ impl Problem for DayNine {
             let mut moving_distance = [0; 2];
             match m[0].as_str() {
                 "R" => {
-                    println!("moving {} by {} steps", m[0], m[1]);
                     moving_distance[0] += m[1].parse::<i32>().unwrap();
                 }
                 "U" => {
-                    println!("moving {} by {} steps", m[0], m[1]);
                     moving_distance[1] += m[1].parse::<i32>().unwrap();
                 }
                 "L" => {
-                    println!("moving {} by {} steps", m[0], m[1]);
                     moving_distance[0] -= m[1].parse::<i32>().unwrap();
                 }
                 "D" => {
-                    println!("moving {} by {} steps", m[0], m[1]);
                     moving_distance[1] -= m[1].parse::<i32>().unwrap();
                 }
                 _ => {}
@@ -59,7 +54,6 @@ impl Problem for DayNine {
                     }
                     tail_positions.push(pos_tail);
                 }
-                println!("step x {sign}, dif_x {dif_x}, pos_head {:?}, pos_tail {:?}", pos_head, pos_tail);
             }
             let mut sign = 1;
             if moving_distance[1] < 0 {
@@ -79,36 +73,29 @@ impl Problem for DayNine {
                     }
                     tail_positions.push(pos_tail);
                 }
-                println!("step y {sign}, dif_y {dif_y}, pos_head {:?}, pos_tail {:?}", pos_head, pos_tail);
             }
         }
         let tail_positions = tail_positions.iter().unique();
-        println!("{tail_positions:?}");
         format!("{}", tail_positions.count())
     }
 
     fn part_two(&self, input: &str) -> String {
         let mut contents = read_from_csv(input, b' ');
-        println!("{contents:?}");
         let mut pos_knots = [[0, 0]; 10];
         let mut tail_positions = vec![[0, 0]];
         for m in contents.iter() {
             let mut moving_distance = [0; 2];
             match m[0].as_str() {
                 "R" => {
-                    println!("moving {} by {} steps", m[0], m[1]);
                     moving_distance[0] += m[1].parse::<i32>().unwrap();
                 }
                 "U" => {
-                    println!("moving {} by {} steps", m[0], m[1]);
                     moving_distance[1] += m[1].parse::<i32>().unwrap();
                 }
                 "L" => {
-                    println!("moving {} by {} steps", m[0], m[1]);
                     moving_distance[0] -= m[1].parse::<i32>().unwrap();
                 }
                 "D" => {
-                    println!("moving {} by {} steps", m[0], m[1]);
                     moving_distance[1] -= m[1].parse::<i32>().unwrap();
                 }
                 _ => {}
@@ -153,12 +140,9 @@ impl Problem for DayNine {
                         tail_positions.push(pos_knots.last().unwrap().clone());
                     }
                 }
-                println!("pos after: {pos_knots:?}");
             }
         }
         let tail_positions = tail_positions.iter().unique();
-        //println!("{tail_positions:?}");
-
         format!("{}", tail_positions.count())
     }
 }

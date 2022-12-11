@@ -10,11 +10,11 @@ pub struct DayEleven {}
 pub struct Monkey {
     pub id: usize,
     pub items: Vec<u64>,
-    counter: u64,
+    pub counter: u64,
     add: u64,
     mul: u64,
     square: u64,
-    test_divide: u64,
+    pub test_divide: u64,
     test_true: usize,
     test_false: usize,
 }

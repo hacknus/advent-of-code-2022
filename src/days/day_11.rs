@@ -19,23 +19,8 @@ pub struct Monkey {
     test_false: usize,
 }
 
-
-pub fn gcd(vals: &mut Vec<u64>) -> u64 {
-    let a =  vals[0];
-    let mut g = a.gcd(&mut vals[1]);
-    for i in 2..vals.len() {
-        g = g.gcd( &mut vals[i]);
-    }
-    g
-}
-
-pub fn lcm(vals: &mut Vec<u64>) -> u64 {
-    let a =  vals[0];
-    let mut g = a.lcm(&mut vals[1]);
-    for i in 2..vals.len() {
-        g = g.lcm( &mut vals[i]);
-    }
-    g
+pub fn lcm(vals: &[u64]) -> u64 {
+    vals.iter().cloned().reduce(|a, b| { a.lcm(&b) }).unwrap()
 }
 
 
@@ -87,7 +72,7 @@ impl Monkey {
         self.items = self.items.iter().map(|i| ((i.pow(self.square as u32) + self.add) * self.mul) / 3).collect();
     }
 
-    pub fn inspect_worried(&mut self, scalar :u64) {
+    pub fn inspect_worried(&mut self, scalar: u64) {
         self.counter += self.items.len() as u64;
         self.items = self.items.iter().map(|i| {
             let val = (i.pow(self.square as u32) + self.add) * self.mul;
@@ -152,7 +137,7 @@ impl Problem for DayEleven {
         for monkey in monkeys.iter() {
             vals.push(monkey.test_divide);
         }
-        let lcm_scalar = lcm(&mut vals);
+        let lcm_scalar = lcm(&vals);
 
         for round in 0..10000 {
             for i in 0..monkeys.len() {
@@ -173,7 +158,7 @@ impl Problem for DayEleven {
         inspection_times.sort();
         inspection_times.reverse();
 
-        format!("{}", inspection_times[0]* inspection_times[1])
+        format!("{}", inspection_times[0] * inspection_times[1])
     }
 }
 

@@ -140,8 +140,81 @@ impl Problem for DayTwelve {
 
     fn part_two(&self, input: &str) -> String {
         let contents = read_file_lines(input);
-        println!("{contents:?}");
-        format!("{}", "Part two not yet implemented.")
+        let mut grid = vec![];
+        let letters = "abcdefghijklmnopqrstuvwxyz";
+        let mut target = [0; 2];
+        let mut initial = [0; 2];
+        for (y, line) in contents.iter().enumerate() {
+            let mut x = 0;
+            let row = line.chars().map(|s| {
+                match letters.chars().position(|si| si == s) {
+                    None => {
+                        if s == 'S' {
+                            initial = [x, y];
+                            x += 1;
+                            0
+                        } else if s == 'E' {
+                            target = [x, y];
+                            x += 1;
+                            letters.len() as u32 - 1
+                        } else {
+                            panic!("error: {s}");
+                        }
+                    }
+                    Some(si) => {
+                        x += 1;
+                        si as u32
+                    }
+                }
+            }).collect::<Vec<u32>>();
+            grid.push(row);
+        }
+        let current_height = 0;
+        println!("{grid:?}");
+        println!("{initial:?}");
+        println!("{target:?}");
+        for line in grid.iter() {
+            println!("{line:?}");
+        }
+        let mut currently_wet = vec![initial];
+        for x in 0..grid[0].len() {
+            for y in 0..grid.len() {
+                if grid[y][x] == 0 {
+                    currently_wet.push([x,y]);
+                }
+            }
+        }
+        let mut history = currently_wet.clone();
+        let mut counter = 0;
+        loop {
+            // get all adjacent with equal or 1 lower
+            let mut new_currently_wet = vec![];
+            for i in 0..currently_wet.len() {
+                let cell = currently_wet[i];
+                for x in 0..grid[0].len() {
+                    for y in 0..grid.len() {
+                        let current_altitude = grid[cell[1]][cell[0]];
+                        if grid[y][x] <= current_altitude + 1 {
+                            if is_adjacent(&cell, &[x, y]) {
+                                if !history.contains(&[x, y]) {
+                                    new_currently_wet.push([x, y]);
+                                    history.push([x, y]);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            currently_wet = new_currently_wet;
+            counter += 1;
+            println!("{currently_wet:?}");
+            // check if target is in there
+            if currently_wet.contains(&target) {
+                break;
+            }
+        }
+
+        format!("{}", counter)
     }
 }
 

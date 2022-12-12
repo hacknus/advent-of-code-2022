@@ -13,12 +13,8 @@ pub fn get_left(pos: &[usize; 2]) -> Option<[usize; 2]> {
     }
 }
 
-pub fn get_right(pos: &[usize; 2], len: usize) -> Option<[usize; 2]> {
-    if pos[0] < len + 1 {
-        Some([pos[0] + 1, pos[1]])
-    } else {
-        None
-    }
+pub fn get_right(pos: &[usize; 2]) -> Option<[usize; 2]> {
+    Some([pos[0] + 1, pos[1]])
 }
 
 pub fn get_up(pos: &[usize; 2]) -> Option<[usize; 2]> {
@@ -29,16 +25,12 @@ pub fn get_up(pos: &[usize; 2]) -> Option<[usize; 2]> {
     }
 }
 
-pub fn get_down(pos: &[usize; 2], len: usize) -> Option<[usize; 2]> {
-    if pos[1] < len + 1 {
-        Some([pos[0], pos[1] + 1])
-    } else {
-        None
-    }
+pub fn get_down(pos: &[usize; 2]) -> Option<[usize; 2]> {
+    Some([pos[0], pos[1] + 1])
 }
 
-pub fn is_adjacent(me: &[usize; 2], other: &[usize; 2], lens: [usize; 2]) -> bool {
-    match get_down(&me, lens[1]) {
+pub fn is_adjacent(me: &[usize; 2], other: &[usize; 2]) -> bool {
+    match get_down(&me) {
         None => {}
         Some(down) => {
             if down == *other {
@@ -54,7 +46,7 @@ pub fn is_adjacent(me: &[usize; 2], other: &[usize; 2], lens: [usize; 2]) -> boo
             }
         }
     }
-    match get_right(&me, lens[0]) {
+    match get_right(&me) {
         None => {}
         Some(right) => {
             if right == *other {
@@ -92,7 +84,7 @@ impl Problem for DayTwelve {
                         } else if s == 'E' {
                             target = [x, y];
                             x += 1;
-                            letters.len() as u32
+                            letters.len() as u32 - 1
                         } else {
                             panic!("error: {s}");
                         }
@@ -113,26 +105,30 @@ impl Problem for DayTwelve {
             println!("{line:?}");
         }
         let mut currently_wet = vec![initial];
+        let mut history = currently_wet.clone();
         let mut counter = 0;
         loop {
             // get all adjacent with equal or 1 lower
+            let mut new_currently_wet = vec![];
             for i in 0..currently_wet.len() {
                 let cell = currently_wet[i];
                 for x in 0..grid[0].len() {
                     for y in 0..grid.len() {
                         let current_altitude = grid[cell[1]][cell[0]];
                         if grid[y][x] <= current_altitude + 1 {
-                            if is_adjacent(&cell, &[x, y], [grid[0].len(), grid.len()]) {
-                                if !currently_wet.contains(&[x, y]) {
-                                    currently_wet.push([x, y]);
+                            if is_adjacent(&cell, &[x, y]) {
+                                if !history.contains(&[x, y]) {
+                                    new_currently_wet.push([x, y]);
+                                    history.push([x, y]);
                                 }
                             }
                         }
                     }
                 }
             }
-            println!("{currently_wet:?}");
+            currently_wet = new_currently_wet;
             counter += 1;
+            println!("{currently_wet:?}");
             // check if target is in there
             if currently_wet.contains(&target) {
                 break;

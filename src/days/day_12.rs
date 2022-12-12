@@ -4,58 +4,73 @@ use crate::problem::Problem;
 
 pub struct DayTwelve {}
 
-pub enum Direction {
-    LEFT,
-    RIGHT,
-    UP,
-    DOWN,
-}
 
-pub fn get_weight(grid: &Vec<Vec<u32>>, location: &[usize; 2]) -> Vec<Vec<f32>> {
-    let current_altitude = grid[location[1]][location[0]];
-    let mut weight = vec![vec![1.0; grid[0].len()]; grid.len()];
-    for altitude in (current_altitude..25).rev() {
-        for y in 0..grid.len() {
-            for x in 0..grid[0].len() {
-                if altitude == grid[y][x] && [x, y] != *location && grid[y][x] - current_altitude <= 1 {
-                    weight[y][x] += altitude as f32 / ((x as i32 - location[0] as i32).pow(2) + (y as i32 - location[1] as i32).pow(2)).sqrt() as f32;
-                }
-            }
-        }
-    }
-    weight
-}
-
-pub fn make_move(weights: &Vec<Vec<f32>>, location: &[usize; 2]) -> Direction {
-    let mut up = 0;
-    let mut down = 0;
-    let mut left = 0;
-    let mut right = 0;
-    for x in 0..weights[0].len() {
-        for y in 0..weights.len() {
-            if x < location[0] {
-                left += (weights[y][x]*100.0) as u32;
-            } else if x > location[0] {
-                right += (weights[y][x]*100.0) as u32;
-            }
-            if y < location[1] {
-                down += (weights[y][x]*100.0) as u32;
-            } else if y > location[1] {
-                up += (weights[y][x]*100.0) as u32;
-            }
-        }
-    }
-    if [up, down, right, left].iter().max().unwrap() == &up {
-        Direction::UP
-    } else if [up, down, right, left].iter().max().unwrap() == &down {
-        Direction::DOWN
-    } else if [up, down, right, left].iter().max().unwrap() == &left {
-        Direction::LEFT
-    } else if [up, down, right, left].iter().max().unwrap() == &right {
-        Direction::RIGHT
+pub fn get_left(pos: &[usize; 2]) -> Option<[usize; 2]> {
+    if pos[0] > 0 {
+        Some([pos[0] - 1, pos[1]])
     } else {
-        Direction::UP
+        None
     }
+}
+
+pub fn get_right(pos: &[usize; 2], len: usize) -> Option<[usize; 2]> {
+    if pos[0] < len + 1 {
+        Some([pos[0] + 1, pos[1]])
+    } else {
+        None
+    }
+}
+
+pub fn get_up(pos: &[usize; 2]) -> Option<[usize; 2]> {
+    if pos[1] > 0 {
+        Some([pos[0], pos[1] - 1])
+    } else {
+        None
+    }
+}
+
+pub fn get_down(pos: &[usize; 2], len: usize) -> Option<[usize; 2]> {
+    if pos[1] < len + 1 {
+        Some([pos[0], pos[1] + 1])
+    } else {
+        None
+    }
+}
+
+pub fn is_adjacent(me: &[usize; 2], other: &[usize; 2], lens: [usize; 2]) -> bool {
+    match get_down(&me, lens[1]) {
+        None => {}
+        Some(down) => {
+            if down == *other {
+                return true;
+            }
+        }
+    }
+    match get_up(&me) {
+        None => {}
+        Some(up) => {
+            if up == *other {
+                return true;
+            }
+        }
+    }
+    match get_right(&me, lens[0]) {
+        None => {}
+        Some(right) => {
+            if right == *other {
+                return true;
+            }
+        }
+    }
+    match get_left(&me) {
+        None => {}
+        Some(left) => {
+            if left == *other {
+                return true;
+            }
+        }
+    }
+    false
 }
 
 impl Problem for DayTwelve {
@@ -97,38 +112,32 @@ impl Problem for DayTwelve {
         for line in grid.iter() {
             println!("{line:?}");
         }
+        let mut currently_wet = vec![initial];
         let mut counter = 0;
         loop {
-            if initial == target {
+            // get all adjacent with equal or 1 lower
+            for i in 0..currently_wet.len() {
+                let cell = currently_wet[i];
+                for x in 0..grid[0].len() {
+                    for y in 0..grid.len() {
+                        let current_altitude = grid[cell[1]][cell[0]];
+                        if grid[y][x] <= current_altitude + 1 {
+                            if is_adjacent(&cell, &[x, y], [grid[0].len(), grid.len()]) {
+                                if !currently_wet.contains(&[x, y]) {
+                                    currently_wet.push([x, y]);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            println!("{currently_wet:?}");
+            counter += 1;
+            // check if target is in there
+            if currently_wet.contains(&target) {
                 break;
             }
-            let weights = get_weight(&grid, &initial);
-            for line in weights.iter() {
-                println!("{line:?}");
-            }
-            let next_move = make_move(&weights, &initial);
-            counter += 1;
-            match next_move {
-                Direction::LEFT => {
-                    println!("going left");
-                    initial[0] -= 1;
-                }
-                Direction::RIGHT => {
-                    println!("going right");
-                    initial[0] += 1;
-                }
-                Direction::UP => {
-                    println!("going up");
-                    initial[1] += 1;
-                }
-                Direction::DOWN => {
-                    println!("going down");
-                    initial[1] -= 1;
-                }
-            }
         }
-
-
 
         format!("{}", counter)
     }

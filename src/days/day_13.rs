@@ -1,11 +1,13 @@
 use std::fs;
 use std::num::ParseIntError;
+use std::ops::Index;
 use crate::io::read_file_lines;
 use crate::problem::Problem;
+use std::collections::VecDeque;
 
 pub struct DayThirteen {}
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Element {
     pub val: Option<u32>,
     pub children: Option<Vec<Element>>,
@@ -186,7 +188,7 @@ pub fn check_order(left: &Element, right: &Element) -> Option<bool> {
                 }
                 Some(elements) => {
                     match check_order(left, &elements[0]) {
-                        None => { return None; }
+                        None => { return Some(true); }
                         Some(b) => { return Some(b); }
                     }
                 }
@@ -199,7 +201,7 @@ pub fn check_order(left: &Element, right: &Element) -> Option<bool> {
                 }
                 Some(elements) => {
                     match check_order(&elements[0], right) {
-                        None => { return None; }
+                        None => { return Some(false); }
                         Some(b) => { return Some(b); }
                     }
                 }
@@ -210,7 +212,7 @@ pub fn check_order(left: &Element, right: &Element) -> Option<bool> {
                 (Some(ele_a), Some(ele_b)) => {
                     for (a, b) in ele_a.iter().zip(ele_b.iter()) {
                         match check_order(a, b) {
-                            None => {}
+                            None => { }
                             Some(temp_bool) => {
                                 return Some(temp_bool);
                             }
@@ -234,7 +236,7 @@ pub fn check_order(left: &Element, right: &Element) -> Option<bool> {
                 }
                 (None, None) => {
                     println!("both empty");
-                    return Some(true);
+                    return None;
                 }
             }
         }
@@ -271,9 +273,43 @@ impl Problem for DayThirteen {
     }
 
     fn part_two(&self, input: &str) -> String {
-        let contents = read_file_lines(input);
-        println!("{contents:?}");
-        format!("{}", "Part two not yet implemented.")
+        let contents_raw = fs::read_to_string(input)
+            .expect("Should have been able to read the file");
+        let contents = contents_raw.split("\n\n").map(|s| s.to_string()).collect::<Vec<String>>();
+
+        let mut packets = vec![];
+
+        for pair_raw in contents.iter() {
+            let pair = pair_raw.split("\n").map(|s| s.to_string()).collect::<Vec<String>>();
+            let mut left = Element::new(&pair[0]);
+            let mut right = Element::new(&pair[1]);
+            packets.push(left);
+            packets.push(right);
+        }
+
+        for i in 0..packets.len() {
+            for j in 0..packets.len() - i - 1 {
+                match check_order(&packets[j+1], &packets[j]) {
+                    None => {
+                    }
+                    Some(condition) => {
+                        if condition {
+                            packets.swap(j, j + 1);
+                        }
+                    }
+                }
+            }
+        }
+
+        for p in packets.iter() {
+            println!("{:#?} ", p);
+        }
+        let ele2 = Element { val: None, children: Some(vec![Element { val: None, children: Some(vec![Element { val: Some(2), children: None }]) }]) };
+        let ele6 = Element { val: None, children: Some(vec![Element { val: None, children: Some(vec![Element { val: Some(6), children: None }]) }]) };
+        let index1 = packets.iter().position(|r| *r == ele2).unwrap() + 1;
+        let index2 = packets.iter().position(|r| *r == ele6).unwrap() + 1;
+        let mul = index1 * index2;
+        format!("{}", mul)
     }
 }
 

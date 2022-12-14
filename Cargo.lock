@@ -6,6 +6,7 @@ version = 3
 name = "advent_of_code_2022"
 version = "0.1.0"
 dependencies = [
+ "array2d",
  "chrono",
  "csv",
  "itertools",
@@ -30,6 +31,12 @@ checksum = "819e7219dbd41043ac279b19830f2efc897156490d7fd6ea916720117ee66311"
 dependencies = [
  "libc",
 ]
+
+[[package]]
+name = "array2d"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "79093d31d0a9c7832c71ad74dd945b7861f721e6f242aa67be253a5eecbac937"
 
 [[package]]
 name = "autocfg"

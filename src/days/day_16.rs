@@ -17,13 +17,18 @@ pub struct Valve {
 
 pub fn get_state(me: usize, already_opened: &u32, valves: &Vec<Valve>, minute: &u32, other_players: &u32) -> usize {
     *already_opened as usize * valves.len()  * 31 * 2 + me * 31 * 2 + *minute as usize * 2 + *other_players as usize
+    // state index is composed of:
+    // 0 - 1     number of player (for task 2),  2 states
+    // 2 * minutes     31 timestamp states
+    // 31 * index of valve * 2     valve state (# of valves)
+    // opened valves number  * # of valves * 31 * 2     binary number, each valve is one bit
 }
 
 const MAX_T: u32 = 30;
 
 pub fn make_move(me: usize, valves: Vec<Valve>, states: &Rc<RefCell<Vec<i32>>>, mut already_opened: u32, minute: u32, other_players: u32) -> u32 {
     let mut valves = valves.clone();
-    if minute >= MAX_T {
+    if minute > MAX_T {
         return 0;
     }
 
@@ -84,13 +89,12 @@ impl Problem for DaySixteen {
         let num_states = 2_usize.pow(15) * 50 * 30 * 2;
         let mut states = Rc::new(RefCell::new(vec![-1; num_states]));
 
-        let val = make_move(current, valves.clone(), &states, 0, 0, 0);
-        println!("{:#?}", val);
+        let val = make_move(current, valves.clone(), &states, 0, 1, 0);
 
         let print_states = states.borrow().iter().map(|s| if *s != -1 { 1 } else { 0 }).sum::<i32>();
         println!("states: {:#?}", print_states);
 
-        format!("{:#?}", current)
+        format!("{:#?}", val)
     }
 
     fn part_two(&self, input: &str) -> String {

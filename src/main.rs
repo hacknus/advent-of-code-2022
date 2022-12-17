@@ -64,7 +64,7 @@ fn day_to_problem(day: usize) -> Option<Box<dyn Problem>> {
 
 fn main() {
     let current_date = chrono::Utc::now();
-    let day = current_date.day();
+    let day = 16; //current_date.day();
     match day_to_problem(day as usize) {
         None => {
             println!("No problem for day {day}...");

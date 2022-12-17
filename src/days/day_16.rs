@@ -1,63 +1,55 @@
 use crate::io::read_file_lines;
 use crate::problem::Problem;
 use std::cell::{BorrowMutError, RefCell, RefMut};
+use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
 pub struct DaySixteen {}
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Valve {
     pub name: String,
+    pub is_open: bool,
     pub flow: u32,
-    pub neighbours_names: Vec<String>,
-    pub neighbours: Vec<Rc<RefCell<Valve>>>,
+    pub neighbours: Vec<String>,
 }
 
-impl Valve {
-    pub fn populate(&mut self, valves: &Vec<Rc<RefCell<Valve>>>) {
-        for neighbour_name in self.neighbours_names.iter() {
-            println!("looking at neighbours: {neighbour_name}");
-            for valve in valves.iter() {
-                match valve.try_borrow_mut() {
-                    Ok(v) => {
-                        if v.name == *neighbour_name {
-                            println!("adding to neighbours!");
-                            self.neighbours.push(Rc::clone(&valve));
-                        }
-                    }
-                    Err(_) => {}
-                }
-            }
-        }
+const MAX_T: u32 = 30;
+
+pub fn make_move(current: Valve, valves: HashMap<String, Valve>, minute: u32) -> u32 {
+    let mut current = current.clone();
+    let mut valves = valves.clone();
+    if minute > MAX_T {
+        return 0;
     }
-}
-
-pub struct Path {
-    pub this: Rc<RefCell<Valve>>,
-    pub next: Option<Rc<RefCell<Path>>>,
-}
-
-impl Path {
-    pub fn build(&mut self, path_length: u32) {
-        if path_length > 30 {
-            return;
-        }
-        println!("building {path_length}");
-        for neighbour in self.this.borrow_mut().neighbours.iter() {
-            let mut path = Rc::new(RefCell::new(Path { this: Rc::clone(neighbour), next: None }));
-            path.borrow_mut().build(path_length + 1);
-            self.next = Some(Rc::clone(&path));
-        }
+    let visits = valves.iter().map(|(n, v)| v.is_open as u32).sum::<u32>();
+    if visits == valves.len() as u32 {
+        return 0;
     }
 
-    pub fn walk(&mut self) {}
+    let max1 = current.neighbours.iter().map(|neighbour| {
+        let mut valves2 = valves.clone();
+        let neighbour = valves2.get_mut(neighbour).unwrap();
+        if !current.is_open && (MAX_T - minute) * current.flow > neighbour.flow {
+            valves.get_mut(&current.name).unwrap().is_open = true;
+            make_move(neighbour.clone(), valves.clone(), minute + 2) + current.flow * (MAX_T - minute)
+        } else {
+            0
+        }
+    }).max().unwrap();
+    let max2 = current.neighbours.iter().map(|neighbour| {
+        let neighbour = valves.get_mut(neighbour).unwrap();
+        make_move(neighbour.clone(), valves.clone(), minute + 1)
+    }).max().unwrap();
+    max1.max(max2)
 }
+
 
 impl Problem for DaySixteen {
     fn part_one(&self, input: &str) -> String {
         let contents = read_file_lines(input);
 
-        let mut valves: Vec<Rc<RefCell<Valve>>> = vec![];
+        let mut valves = HashMap::new();
 
         for line in contents.iter() {
             let line_split = line.split(";").map(|s| s.to_string()).collect::<Vec<String>>();
@@ -65,34 +57,18 @@ impl Problem for DaySixteen {
             let flow = valve_split[1].parse::<u32>().unwrap();
             let name = valve_split[0].split(" ").map(|s| s.to_string()).collect::<Vec<String>>()[1].clone();
             let paths = line_split[1].split(" ").map(|s| s.to_string().replace(",", "")).skip(5).collect::<Vec<String>>();
-            let valve = Valve { name, flow, neighbours_names: paths, neighbours: vec![] };
+            let valve = Valve { name, is_open: false, flow, neighbours: paths };
             println!("{valve:?}");
-            valves.push(Rc::new(RefCell::new(valve)));
+            valves.insert(valve.name.clone(), valve);
         }
 
-        for valve in valves.iter() {
-            println!("looking at: {}", valve.borrow_mut().name);
-            valve.borrow_mut().populate(&valves);
-        }
-        println!("finding root");
         // find root
-        let mut root = Rc::new(RefCell::new(Valve {
-            name: "".to_string(),
-            flow: 0,
-            neighbours_names: vec![],
-            neighbours: vec![],
-        }));
-        for valve in valves.iter() {
-            if valve.borrow_mut().name == "AA" {
-                root = Rc::clone(valve);
-            }
-        }
+        let mut current = valves.get("AA").unwrap();
 
-        let mut path = Path { this: root, next: None };
+        let val = make_move(current.clone(), valves.clone(), 0);
+        println!("{:#?}", val);
 
-        path.build(0);
-
-        format!("{:#?}", 0)
+        format!("{:#?}", current)
     }
 
     fn part_two(&self, input: &str) -> String {

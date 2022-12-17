@@ -15,13 +15,13 @@ pub struct Valve {
     pub neighbours: Vec<usize>,
 }
 
-pub fn get_state(me: usize, already_opened: &Vec<usize>, valves: &Vec<Valve>, minute: &u32, other_players: &u32) -> usize {
-    already_opened.len() * valves.len() * 31 * 2 + me * 31 * 2 + *minute as usize * 2 + *other_players as usize
+pub fn get_state(me: usize, already_opened: &u32, valves: &Vec<Valve>, minute: &u32, other_players: &u32) -> usize {
+    *already_opened as usize * valves.len()  * 31 * 2 + me * 31 * 2 + *minute as usize * 2 + *other_players as usize
 }
 
-const MAX_T: u32 = 6;
+const MAX_T: u32 = 30;
 
-pub fn make_move(me: usize, valves: Vec<Valve>, states: &Rc<RefCell<Vec<i32>>>, mut already_opened: Vec<usize>, minute: u32, other_players: u32) -> u32 {
+pub fn make_move(me: usize, valves: Vec<Valve>, states: &Rc<RefCell<Vec<i32>>>, mut already_opened: u32, minute: u32, other_players: u32) -> u32 {
     let mut valves = valves.clone();
     if minute >= MAX_T {
         return 0;
@@ -37,14 +37,14 @@ pub fn make_move(me: usize, valves: Vec<Valve>, states: &Rc<RefCell<Vec<i32>>>, 
     let mut max2 = 0;
 
     max2 = valves[me].neighbours.iter().map(|neighbour| {
-        make_move(*neighbour, valves.clone(), &Rc::clone(&states), already_opened.clone(), minute + 1, other_players)
+        make_move(*neighbour, valves.clone(), &Rc::clone(&states), already_opened, minute + 1, other_players)
     }).max().unwrap();
 
-    if !already_opened.contains(&me) && valves[me].flow > 0 {
-        already_opened.push(me);
-        let temp = valves[me].flow * (MAX_T - minute - 1);
+    if (already_opened & me as u32) == 0 && valves[me].flow > 0 {
+        already_opened |= me as u32;
+        let temp = valves[me].flow * (MAX_T - minute);
         max1 = temp + valves[me].neighbours.iter().map(|neighbour| {
-            make_move(*neighbour, valves.clone(), &Rc::clone(&states), already_opened.clone(), minute + 2, other_players)
+            make_move(*neighbour, valves.clone(), &Rc::clone(&states), already_opened, minute + 2, other_players)
         }).max().unwrap();
     }
 
@@ -84,7 +84,7 @@ impl Problem for DaySixteen {
         let num_states = 2_usize.pow(15) * 50 * 30 * 2;
         let mut states = Rc::new(RefCell::new(vec![-1; num_states]));
 
-        let val = make_move(current, valves.clone(), &states, vec![], 0, 0);
+        let val = make_move(current, valves.clone(), &states, 0, 0, 0);
         println!("{:#?}", val);
 
         let print_states = states.borrow().iter().map(|s| if *s != -1 { 1 } else { 0 }).sum::<i32>();

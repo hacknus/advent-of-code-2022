@@ -3,6 +3,7 @@ mod problem;
 #[allow(unused)]
 mod days;
 
+use std::time::Instant;
 use problem::Problem;
 use days::day_1::DayOne;
 use days::day_2::DayTwo;
@@ -64,14 +65,21 @@ fn day_to_problem(day: usize) -> Option<Box<dyn Problem>> {
 
 fn main() {
     let current_date = chrono::Utc::now();
-    let day = 16; //current_date.day();
+    let day = current_date.day();
     match day_to_problem(day as usize) {
         None => {
             println!("No problem for day {day}...");
         }
         Some(problem) => {
+
+            let start = Instant::now();
             let answer_one = problem.part_one(format!("input/puzzle_{day}_1.txt").as_str());
+            println!("solving task one took {:?}",start.elapsed());
+
+            let start = Instant::now();
             let answer_two = problem.part_two(format!("input/puzzle_{day}_2.txt").as_str());
+            println!("solving task two took {:?}",start.elapsed());
+
             println!("Answer of Task Day {day}/1:");
             println!("{answer_one}\n");
             println!("Answer of Task Day {day}/2:");

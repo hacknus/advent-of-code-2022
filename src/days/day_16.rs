@@ -3,6 +3,7 @@ use crate::problem::Problem;
 use std::cell::{BorrowMutError, RefCell, RefMut};
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
+use std::time::Instant;
 
 pub struct DaySixteen {}
 
@@ -10,31 +11,26 @@ pub struct DaySixteen {}
 pub struct Valve {
     pub name: String,
     pub is_open: bool,
-    pub flow: u32,
+    pub flow: u64,
     pub neighbours_strings: Vec<String>,
     pub neighbours: Vec<usize>,
 }
 
-pub fn get_state(me: usize, already_opened: &u32, valves: &Vec<Valve>, minute: &u32, other_players: &u32) -> usize {
-    *already_opened as usize * valves.len()  * 31 * 2 + me * 31 * 2 + *minute as usize * 2 + *other_players as usize
-    // state index is composed of:
-    // 0 - 1     number of player (for task 2),  2 states
-    // 2 * minutes     31 timestamp states
-    // 31 * index of valve * 2     valve state (# of valves)
-    // opened valves number  * # of valves * 31 * 2     binary number, each valve is one bit
-}
 
-const MAX_T: u32 = 30;
-
-pub fn make_move(me: usize, valves: Vec<Valve>, states: &Rc<RefCell<Vec<i32>>>, mut already_opened: u32, minute: u32, other_players: u32) -> u32 {
-    let mut valves = valves.clone();
-    if minute > MAX_T {
+pub fn make_move(source: usize, me: usize, valves: &Vec<Valve>, states: &mut HashMap<(usize, u64, usize, u64, bool), u64>, mut already_opened: u64, minute: u64, max_t: u64, other_players: bool) -> u64 {
+    if minute >= max_t {
+        if other_players {
+            return make_move(source, source, valves, states, already_opened, 0, max_t, !other_players);
+        }
         return 0;
     }
 
-    let state = get_state(me, &already_opened, &valves, &minute, &other_players);
-    if states.borrow()[state] >= 0 {
-        return states.borrow()[state] as u32;
+    let state = (me, already_opened, valves.len(), minute, other_players);
+    match states.get(&state) {
+        None => {}
+        Some(val) => {
+            return *val;
+        }
     }
 
     let mut ans = 0;
@@ -42,25 +38,26 @@ pub fn make_move(me: usize, valves: Vec<Valve>, states: &Rc<RefCell<Vec<i32>>>, 
     let mut max2 = 0;
 
     max2 = valves[me].neighbours.iter().map(|neighbour| {
-        make_move(*neighbour, valves.clone(), &Rc::clone(&states), already_opened, minute + 1, other_players)
+        make_move(source, *neighbour, valves, states, already_opened, minute + 1, max_t, other_players)
     }).max().unwrap();
 
-    if (already_opened & me as u32) == 0 && valves[me].flow > 0 {
-        already_opened |= me as u32;
-        let temp = valves[me].flow * (MAX_T - minute);
+    if (already_opened & (1_u64 << me)) == 0 && valves[me].flow > 0 {
+        already_opened |= (1_u64 << me);
+        let temp = valves[me].flow * (max_t - minute - 1);
         max1 = temp + valves[me].neighbours.iter().map(|neighbour| {
-            make_move(*neighbour, valves.clone(), &Rc::clone(&states), already_opened, minute + 2, other_players)
+            make_move(source,*neighbour, valves, states, already_opened, minute + 2, max_t, other_players)
         }).max().unwrap();
     }
 
     ans += max1.max(max2);
-    states.borrow_mut()[state] = ans as i32;
+    states.insert(state, ans);
     ans
 }
 
 
 impl Problem for DaySixteen {
     fn part_one(&self, input: &str) -> String {
+
         let contents = read_file_lines(input);
 
         let mut valves = vec![];
@@ -68,7 +65,7 @@ impl Problem for DaySixteen {
         for line in contents.iter() {
             let line_split = line.split(";").map(|s| s.to_string()).collect::<Vec<String>>();
             let valve_split = line_split[0].split("=").map(|s| s.to_string()).collect::<Vec<String>>();
-            let flow = valve_split[1].parse::<u32>().unwrap();
+            let flow = valve_split[1].parse::<u64>().unwrap();
             let name = valve_split[0].split(" ").map(|s| s.to_string()).collect::<Vec<String>>()[1].clone();
             let paths = line_split[1].split(" ").map(|s| s.to_string().replace(",", "")).skip(5).collect::<Vec<String>>();
             let valve = Valve { name, is_open: false, flow, neighbours_strings: paths, neighbours: vec![] };
@@ -80,27 +77,54 @@ impl Problem for DaySixteen {
                 let index = valves.iter().position(|v| &v.name == neighbour).unwrap();
                 valves[i].neighbours.push(index);
             }
-            println!("{:#?}", valves[i]);
         }
 
         // find root
         let mut current = valves.iter().position(|v| v.name == "AA").unwrap();
 
-        let num_states = 2_usize.pow(15) * 50 * 30 * 2;
-        let mut states = Rc::new(RefCell::new(vec![-1; num_states]));
+        let mut states = HashMap::new();
 
-        let val = make_move(current, valves.clone(), &states, 0, 1, 0);
-
-        let print_states = states.borrow().iter().map(|s| if *s != -1 { 1 } else { 0 }).sum::<i32>();
-        println!("states: {:#?}", print_states);
+        let start = Instant::now();
+        let val = make_move(current, current, &valves, &mut states, 0, 0, 30, false);
+        println!("calculation time: {:?}", start.elapsed());
 
         format!("{:#?}", val)
     }
 
     fn part_two(&self, input: &str) -> String {
         let contents = read_file_lines(input);
-        println!("{contents:?}");
-        format!("{}", "Part two not yet implemented.")
+
+        let mut valves = vec![];
+
+        for line in contents.iter() {
+            let line_split = line.split(";").map(|s| s.to_string()).collect::<Vec<String>>();
+            let valve_split = line_split[0].split("=").map(|s| s.to_string()).collect::<Vec<String>>();
+            let flow = valve_split[1].parse::<u64>().unwrap();
+            let name = valve_split[0].split(" ").map(|s| s.to_string()).collect::<Vec<String>>()[1].clone();
+            let paths = line_split[1].split(" ").map(|s| s.to_string().replace(",", "")).skip(5).collect::<Vec<String>>();
+            let valve = Valve { name, is_open: false, flow, neighbours_strings: paths, neighbours: vec![] };
+            valves.push(valve);
+        }
+        for i in 0..valves.len() {
+            let valve = valves[i].clone();
+            for neighbour in valve.neighbours_strings.iter() {
+                let index = valves.iter().position(|v| &v.name == neighbour).unwrap();
+                valves[i].neighbours.push(index);
+            }
+        }
+
+        // find root
+        let mut current = valves.iter().position(|v| v.name == "AA").unwrap();
+
+        let num_states = 2_usize.pow(valves.len() as u32) * valves.len() * 31 * 2;
+
+        let mut states = HashMap::new();
+
+        let start = Instant::now();
+        let val = make_move(current, current, &valves, &mut states, 0, 0, 26, true);
+        println!("calculation time: {:?}", start.elapsed());
+
+        format!("{:#?}", val)
     }
 }
 

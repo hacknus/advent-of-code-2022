@@ -6,99 +6,130 @@ pub struct DayNineteen {}
 
 #[derive(Debug, Clone)]
 pub struct Blueprint {
-    pub id: i32,
-    pub ore_bot: [i32; 1],
-    pub clay_bot: [i32; 1],
-    pub obsidian_bot: [i32; 2],
-    pub geode_bot: [i32; 2],
+    pub id: u32,
+    pub ore_bot: [u32; 1],
+    pub clay_bot: [u32; 1],
+    pub obsidian_bot: [u32; 2],
+    pub geode_bot: [u32; 2],
+}
+
+#[derive(Debug, Clone)]
+pub struct State {
+    pub time: u32,
+    pub ore: u32,
+    pub clay: u32,
+    pub obsidian: u32,
+    pub geode: u32,
+    pub n_ore_bots: u32,
+    pub n_clay_bots: u32,
+    pub n_obsidian_bots: u32,
+    pub n_geode_bots: u32,
 }
 
 impl Blueprint {
-    pub fn run(&mut self, time: i32) -> i32 {
-        let mut ore = 0;
-        let mut clay = 0;
-        let mut obsidian = 0;
+    pub fn next_move(&mut self, mut state: State, mut do_not_buy: [bool; 4]) -> u32 {
         let mut geode = 0;
-        let mut ore_bots = 1;
-        let mut clay_bots = 0;
-        let mut obsidian_bots = 0;
-        let mut geode_bots = 0;
-
-        for t in 0..time {
-            let mut ore_bots_temp = ore_bots;
-            let mut clay_bots_temp = clay_bots;
-            let mut obsidian_bots_temp = obsidian_bots;
-            let mut geode_bots_temp = geode_bots;
-
-            let steps_to_ore_bot = self.ore_bot[0];
-            let steps_to_clay_bot = self.clay_bot[0];
-            let mut steps_to_obs_bot = 0;
-            let mut steps_to_geo_bot = 0;
-            if clay_bots == 0 {
-                steps_to_obs_bot = self.obsidian_bot[1] - clay;
-            } else {
-                steps_to_obs_bot = ((self.obsidian_bot[1] - clay) / clay_bots).max((self.obsidian_bot[0] - ore) / ore_bots)
-            }
-            if obsidian_bots == 0 {
-                steps_to_geo_bot = self.geode_bot[1] - obsidian;
-            } else {
-                steps_to_geo_bot = ((self.geode_bot[1] - obsidian) / obsidian_bots).max((self.geode_bot[0] - ore) / ore_bots);
-            }
-
-            println!("steps_to_geo_bot: {steps_to_geo_bot}");
-            println!("steps_to_obs_bot: {steps_to_obs_bot}");
-            println!("steps_to_clay_bot: {steps_to_clay_bot}");
-            println!("steps_to_ore_bot: {steps_to_ore_bot}");
-            if ore >= self.geode_bot[0] &&
-                obsidian >= self.geode_bot[1] {
-                ore -= self.geode_bot[0];
-                obsidian -= self.geode_bot[1];
-                geode_bots_temp += 1;
-            } else if ore >= self.obsidian_bot[0] &&
-                clay >= self.obsidian_bot[1] &&
-                steps_to_obs_bot < steps_to_geo_bot {
-                ore -= self.obsidian_bot[0];
-                clay -= self.obsidian_bot[1];
-                obsidian_bots_temp += 1;
-            } else if ore >= self.clay_bot[0] &&
-                clay < self.obsidian_bot[1] &&
-                steps_to_clay_bot < steps_to_obs_bot {
-                ore -= self.clay_bot[0];
-                clay_bots_temp += 1;
-            } else if ore >= self.ore_bot[0] &&
-                steps_to_ore_bot < steps_to_clay_bot {
-                ore -= self.ore_bot[0];
-                ore_bots_temp += 1;
-            }
-
-
-            for _ in 0..ore_bots {
-                ore += 1;
-            }
-            for _ in 0..clay_bots {
-                clay += 1;
-            }
-            for _ in 0..obsidian_bots {
-                obsidian += 1;
-            }
-            for _ in 0..geode_bots {
-                geode += 1;
-            }
-            ore_bots = ore_bots_temp;
-            clay_bots = clay_bots_temp;
-            obsidian_bots = obsidian_bots_temp;
-            geode_bots = geode_bots_temp;
-            println!("round {}", t + 1);
-            println!("ore_bots: {}", ore_bots);
-            println!("ore: {}", ore);
-            println!("clay_bots: {}", clay_bots);
-            println!("clay: {}", clay);
-            println!("obsidian_bots: {}", obsidian_bots);
-            println!("obsidian: {}", obsidian);
-            println!("geode_bots: {}", geode_bots);
-            println!("geode: {}", geode);
-            println!("");
+        if state.time == 0 {
+            return state.geode;
         }
+        state.time -= 1;
+
+        let ore_threshold = *[self.ore_bot[0], self.clay_bot[0], self.obsidian_bot[0], self.geode_bot[0]].iter().max().unwrap();
+
+        if !do_not_buy[0] && state.ore >= self.ore_bot[0] && state.n_ore_bots <= ore_threshold {
+            let mut next_state = state.clone();
+            let mut next_do_not_buy = [false; 4];
+
+            next_state.ore += next_state.n_ore_bots;
+            next_state.clay += next_state.n_clay_bots;
+            next_state.obsidian += next_state.n_obsidian_bots;
+            next_state.geode += next_state.n_geode_bots;
+
+            next_state.ore -= self.ore_bot[0];
+            next_state.n_ore_bots += 1;
+            geode = geode.max(self.next_move(next_state, next_do_not_buy));
+        }
+        if !do_not_buy[1] && state.ore >= self.clay_bot[0] {
+            let mut next_state = state.clone();
+            let mut next_do_not_buy = [false; 4];
+
+            next_state.ore += next_state.n_ore_bots;
+            next_state.clay += next_state.n_clay_bots;
+            next_state.obsidian += next_state.n_obsidian_bots;
+            next_state.geode += next_state.n_geode_bots;
+
+            next_state.ore -= self.clay_bot[0];
+            next_state.n_clay_bots += 1;
+
+            geode = geode.max(self.next_move(next_state, next_do_not_buy));
+        }
+        if !do_not_buy[2] && state.ore >= self.obsidian_bot[0] &&
+            state.clay >= self.obsidian_bot[1]  {
+            let mut next_state = state.clone();
+            let mut next_do_not_buy = [false; 4];
+
+            next_state.ore += next_state.n_ore_bots;
+            next_state.clay += next_state.n_clay_bots;
+            next_state.obsidian += next_state.n_obsidian_bots;
+            next_state.geode += next_state.n_geode_bots;
+
+            next_state.ore -= self.obsidian_bot[0];
+            next_state.clay -= self.obsidian_bot[1];
+            next_state.n_obsidian_bots += 1;
+            geode = geode.max(self.next_move(next_state, next_do_not_buy));
+        }
+        if !do_not_buy[3] && state.ore >= self.geode_bot[0] &&
+            state.obsidian >= self.geode_bot[1] {
+            let mut next_state = state.clone();
+            let mut next_do_not_buy = [false; 4];
+
+            next_state.ore += next_state.n_ore_bots;
+            next_state.clay += next_state.n_clay_bots;
+            next_state.obsidian += next_state.n_obsidian_bots;
+            next_state.geode += next_state.n_geode_bots;
+
+            next_state.ore -= self.geode_bot[0];
+            next_state.obsidian -= self.geode_bot[1];
+            next_state.n_geode_bots += 1;
+            geode = geode.max(self.next_move(next_state, next_do_not_buy));
+        }
+        let mut next_do_not_buy = [false; 4];
+
+        if state.ore >= self.ore_bot[0] {
+            next_do_not_buy[0] = true;
+        }
+        if state.ore >= self.clay_bot[0] {
+            next_do_not_buy[1] = true;
+        }
+        if state.ore >= self.obsidian_bot[0] &&
+            state.clay >= self.obsidian_bot[1] {
+            next_do_not_buy[2] = true;
+        }
+        if state.ore >= self.geode_bot[0] &&
+            state.obsidian >= self.geode_bot[1] {
+            next_do_not_buy[3] = true;
+        }
+        state.ore += state.n_ore_bots;
+        state.clay += state.n_clay_bots;
+        state.obsidian += state.n_obsidian_bots;
+        state.geode += state.n_geode_bots;
+
+        geode.max(self.next_move(state, next_do_not_buy))
+    }
+
+    pub fn run(&mut self, time: u32) -> u32 {
+        let state = State {
+            time,
+            ore: 0,
+            clay: 0,
+            obsidian: 0,
+            geode: 0,
+            n_ore_bots: 1,
+            n_clay_bots: 0,
+            n_obsidian_bots: 0,
+            n_geode_bots: 0,
+        };
+        let geode = self.next_move(state, [false; 4]);
         geode
     }
 }
@@ -111,7 +142,7 @@ impl Problem for DayNineteen {
         for blueprint_line in contents.iter() {
             let vals = re.find_iter(blueprint_line)
                 .filter_map(|digits| digits.as_str().parse().ok())
-                .collect::<Vec<i32>>();
+                .collect::<Vec<u32>>();
             let blueprint = Blueprint {
                 id: vals[0],
                 ore_bot: [vals[1]],
@@ -121,16 +152,40 @@ impl Problem for DayNineteen {
             };
             blueprints.push(blueprint);
         }
-        let mut geode_num = vec![];
+        let mut quality_levels = 0;
         for blueprint in blueprints.iter_mut() {
-            geode_num.push(blueprint.run(24));
+            let num_geodes = blueprint.run(24);
+            let id = blueprint.id;
+            quality_levels += num_geodes * id;
         }
 
-        format!("{:#?}", geode_num)
+        format!("{:#?}", quality_levels)
     }
 
     fn part_two(&self, input: &str) -> String {
-        format!("{}", "Part two not yet implemented.")
+        let contents = read_file_lines(input);
+        let re = Regex::new(r"[0-9]*").unwrap();
+        let mut blueprints = vec![];
+        for blueprint_line in contents.iter() {
+            let vals = re.find_iter(blueprint_line)
+                .filter_map(|digits| digits.as_str().parse().ok())
+                .collect::<Vec<u32>>();
+            let blueprint = Blueprint {
+                id: vals[0],
+                ore_bot: [vals[1]],
+                clay_bot: [vals[2]],
+                obsidian_bot: [vals[3], vals[4]],
+                geode_bot: [vals[5], vals[6]],
+            };
+            blueprints.push(blueprint);
+        }
+        let mut prod = 1;
+        for i in 0..3 {
+            let num_geodes = blueprints[i].run(32);
+            println!("found {} with {}", blueprints[i].id, num_geodes);
+            prod *= num_geodes as u64;
+        }
+        format!("{}", prod)
     }
 }
 

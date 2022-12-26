@@ -161,12 +161,12 @@ impl Human {
             } else if self.x == width - 1 && dx == 1 {
                 // right to left wrap around (side D)
                 // let next_x = grid.iter().positions(|x| x[self.y] == 1 || x[self.y] == 2).nth(0).unwrap();
-                self.next_x = width - 1;
+                self.next_x = 0;
                 self.next_y = self.y;
             } else if self.x == 0 && dx == -1 {
                 // left to right wrap around (side D)
                 // let next_x = grid.iter().positions(|x| x[self.y] == 1 || x[self.y] == 2).last().unwrap();
-                self.next_x = 0;
+                self.next_x = width - 1;
                 self.next_y = self.y;
             } else if grid[(self.x as i32 + dx) as usize][(self.y as i32 + dy) as usize] == 0 {
                 // wrap around cube!
@@ -183,13 +183,11 @@ impl Human {
                             println!("going over side B");
                             self.next_dir = Direction::RIGHT;
                             self.next_y = self.x - *size;
-                            self.next_x = 2 * size;
-                            println!("going to {} {}", self.next_x, self.next_y);
-                            println!("grid = {}", grid[self.next_x][self.next_y]);
+                            self.next_x = 2 * size - 1;
                         } else if self.x >= 3 * size && self.x < 4 * size {
                             // going over side C up
                             self.next_dir = Direction::LEFT;
-                            self.next_y = size - 1 - self.x - 3 * size;
+                            self.next_y = size - 1 - (self.x - 3 * size);
                             self.next_x = 3 * size - 1;
                         }
                     }
@@ -204,12 +202,12 @@ impl Human {
                             // going over side G down
                             self.next_dir = Direction::RIGHT;
                             self.next_y = 3 * size - 1 - (self.x - *size);
-                            self.next_x = 2 * size;
+                            self.next_x = 2 * size - 1;
                         } else if self.x >= 3 * size && self.x < 4 * size {
                             // going over side E down
                             println!("going over side E, down");
                             self.next_dir = Direction::LEFT;
-                            self.next_y = 2 * size + self.x - 3 * size;
+                            self.next_y = 2 * size + (self.x - 3 * size);
                             self.next_x = 3 * size - 1;
                         }
                     }
@@ -219,7 +217,7 @@ impl Human {
                             // going over side B left
                             self.next_dir = Direction::DOWN;
                             self.next_y = 2 * size - 1;
-                            self.next_x = 2 * size - 1 - self.y;
+                            self.next_x = size + self.y;
                         } else {
                             // going over side G left
                             self.next_dir = Direction::UP;
@@ -229,7 +227,7 @@ impl Human {
                     }
                     Direction::RIGHT => {
                         // going over C or E
-                        if self.y < width / 2 {
+                        if self.y < height / 2 {
                             // going over side C right
                             self.next_dir = Direction::DOWN;
                             self.next_y = 2 * size - 1;
@@ -238,7 +236,7 @@ impl Human {
                             // going over side E right
                             self.next_dir = Direction::UP;
                             self.next_y = 3 * size - 1;
-                            self.next_x = 4 * size - 1 - (self.y - 2 * size);
+                            self.next_x = 3 * size + (self.y - 2 * size);
                         }
                     }
                 }
@@ -349,7 +347,7 @@ pub fn re_orient_grid(size: &usize, grid: &mut Vec<Vec<u32>>) -> Vec<Vec<u32>> {
             }
         }
 
-        // rotate lower right square and shift up by 1
+        // rotate lower left square and shift right by 1
         for x in 0..*size {
             for y in 0..*size {
                 grid[size + y][4 * size - 1 - x] = grid[x][3 * size + y];
@@ -546,7 +544,7 @@ impl Problem for DayTwentyTwo {
             // rotation registered, need to rotate 90 deg
             let temp_x = x;
             x = y;
-            y = width - temp_x;
+            y = width - 1 - temp_x;
             match dir {
                 Direction::RIGHT => {
                     dir = Direction::UP;
@@ -569,7 +567,9 @@ impl Problem for DayTwentyTwo {
         println!("x = {x}, y = {y}, dir = {dir:?}");
 
         // higher than 34491
-
+        // higher than 33491
+        //
+        // lower than 200007
         format!("{}", 1000 * (y + 1) + 4 * (x + 1) + dir as usize)
     }
 }
